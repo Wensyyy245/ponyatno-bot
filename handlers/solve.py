@@ -10,7 +10,11 @@ import logging
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
-from PIL import Image
+
+try:  # Pillow нужен только для сжатия фото; без него бот работает, но тратит больше токенов
+    from PIL import Image
+except Exception:  # noqa: BLE001
+    Image = None
 
 import ai
 import config
@@ -53,6 +57,8 @@ def _shrink_image(data: bytes, mime: str) -> tuple[bytes, str]:
     Модель платит за площадь картинки, а 1024 px по длинной стороне хватает,
     чтобы прочитать текст задания.
     """
+    if Image is None:
+        return data, mime
     try:
         img = Image.open(io.BytesIO(data))
         img = img.convert("RGB")
